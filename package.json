@@ -1,5 +1,5 @@
 {
-  "name": "util",
+  "name": "xl-util",
   "version": "0.0.1",
   "peerDependencies": {
     "@angular/common": "^20.1.0",
@@ -8,5 +8,18 @@
   "dependencies": {
     "tslib": "^2.3.0"
   },
-  "sideEffects": false
+  "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "main": "dist/fesm2022/xl-util.mjs",
+    "module": "dist/fesm2022/xl-util.mjs",
+    "typings": "dist/index.d.ts",
+
+    "exports": {
+        ".": {
+            "import": "./dist/fesm2022/xl-util.mjs",
+            "types": "./dist/index.d.ts"
+        }
+    }
 }
