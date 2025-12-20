@@ -7,7 +7,8 @@ export abstract class BaseCrud<T> {
     selectedItem = signal<T | null>(null);
 
     // CRUD операции (имплементират се в service)
-    abstract loadData(): void;
+    abstract loadData(id: any): void;
+    abstract loadList(): void;
     abstract createItem(item: T): void;
     abstract updateItem(item: T): void;
     abstract deleteItem(item: T): void;
@@ -62,7 +63,7 @@ export abstract class BaseCrud<T> {
 
     // Това е методът, който ще викаш от други модули
     openLookup(): Promise<T | null> {
-        this.loadData(); // Зареждаме списъка автоматично
+        this.loadList(); // Зареждаме списъка автоматично
         this.isLookupVisible.set(true);
 
         // Връщаме Promise, който ще се "реши", когато потребителят избере ред
