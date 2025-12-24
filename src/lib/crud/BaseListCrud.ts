@@ -67,7 +67,18 @@ export abstract class BaseListCrud<T> {
         this.http.get<any>(url, { params }).subscribe({
             next: (res) => {
                 const data = res.content || res;
-                const total = res.totalElements !== undefined ? res.totalElements : data.length;
+
+                // Проверяваме всички възможни места за totalElements
+                let total = data.length;
+
+                if (res.page && res.page.totalElements !== undefined) {
+                    // Форматът, който получаваш в момента (Spring Boot 3 / HATEOAS)
+                    total = res.page.totalElements;
+                } else if (res.totalElements !== undefined) {
+                    // Стандартният формат на Spring Page
+                    total = res.totalElements;
+                }
+
                 this.setItems(data, total);
             },
             error: (err) => {
