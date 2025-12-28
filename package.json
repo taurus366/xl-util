@@ -5,5 +5,9 @@
         "@angular/common": "^20.0.0",
         "@angular/core": "^20.0.0"
     },
-    "sideEffects": false
+    "sideEffects": false,
+    "bin": {
+        "xl-sync": "./src/lib/scripts/sync-libs.js",
+        "xl-intl": "./src/lib/scripts/extract-i18n.js"
+    }
 }
