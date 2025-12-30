@@ -7,3 +7,4 @@ export * from './lib/menu/route-store';
 export * from './lib/auth_guard_bridge/auth_guard';
 export * from './lib/layout_bridge/topbar';
 export * from './lib/top_bar/topBarRegistryService';
+export * from './lib/language/language-selector';
