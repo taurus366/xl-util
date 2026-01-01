@@ -1,6 +1,10 @@
-import { inject, signal } from '@angular/core';
+import { effect, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Subject } from 'rxjs';
+import { SelectionService } from '../input_list/selectionService';
+import { DialogService } from 'primeng/dynamicdialog';
+import { getComponentByPath } from '../menu/route-store';
+import { firstValueFrom } from 'rxjs';
 
 // export interface IDetailConfig {
 //     save: string;
@@ -10,6 +14,7 @@ import { Subject } from 'rxjs';
 
 export abstract class BaseDetailCrud<T> {
     protected http = inject(HttpClient);
+    protected selectionService = inject(SelectionService);
 
     selectedItem = signal<T | null>(null);
     isSaving = signal(false);
@@ -83,5 +88,69 @@ export abstract class BaseDetailCrud<T> {
         this.isVisible.set(false);
         this.selectedItem.set(null);
         this.isSaving.set(false);
+    }
+
+//     ROUTE OPEN PATH
+    // Дефинираме сигнала
+    public selectedFromLookup = signal<any>(null);
+    protected constructor() {
+        effect(() => {
+            const item = this.selectionService.selectedItem();
+
+            // ВАЖНО: Проверяваме item И дали диалогът е ВИДИМ в момента
+            if (item && this.isVisible()) {
+                console.log('Прилагане на избор:', item);
+                this.handleLookupSelection(item);
+
+                // ИЗЧИСТВАМЕ веднага, за да не се задейства пак при преначертаване
+                this.selectionService.clear();
+            }
+        });
+    }
+
+    // Метод за изпращане на данни
+    select(item: any) {
+        this.selectedFromLookup.set(item);
+
+        // Малък timeout за изчистване, за да не се задейства повторно при следващ избор
+        setTimeout(() => this.selectedFromLookup.set(null), 100);
+    }
+
+    /**
+     * Този метод може да бъде презаписан (override) в конкретния сървис
+     * (напр. в UserDetailService), за да знаеш кое поле точно да попълниш.
+     */
+    protected handleLookupSelection(item: any) {
+        const current = this.selectedItem();
+        if (current) {
+            // Пример: ако избираме адрес за потребителя
+            // this.selectedItem.set({ ...current, address: item });
+            console.log('BaseDetail прие избора:', item);
+        }
+    }
+
+    protected dialogService = inject(DialogService);
+
+    /**
+     * Универсален метод за отваряне на лупичка чрез патове (Dart style)
+     * @param routePath Пътят от registerRoute (напр. 'user/list')
+     * @param target Целта (напр. 'MANAGER'), за да знаеш кое поле попълваш
+     */
+    async openLookup(routePath: string, header: string = 'Избор'): Promise<any> {
+        const component = await getComponentByPath(routePath);
+
+        if (!component) {
+            console.error(`Компонентът за път "${routePath}" не е намерен!`);
+            return;
+        }
+
+       const ref = this.dialogService.open(component, {
+            header: header,
+            width: '80%',
+            data: {
+                mode: 'lookup'
+            }
+        });
+        return await firstValueFrom(ref!.onClose);
     }
 }

@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 
 import { Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { SelectionService } from '../input_list/selectionService';
 
 export interface ICrudDetailService<T> {
     onSaveSuccess$: Subject<T>;
@@ -18,6 +19,22 @@ export abstract class BaseListCrud<T> {
             this.loadList(this.lastFirst, this.lastRows, this.lastFilters);
         })
     }
+
+
+    protected selectionService = inject(SelectionService);
+    /**
+     * Универсален метод за избор
+     */
+    public selectItem(item: T) {
+        if (!item) return;
+
+        // Пращаме обекта към "пощенската кутия"
+        this.selectionService.select(item);
+
+        // Ако списъкът е отворен в PrimeNG DynamicDialog, тук можеш да го затвориш
+        // if (this.ref) this.ref.close(item);
+    }
+
 
     // Инжектираме HttpClient тук, за да не го пишеш във всеки наследник
     protected http = inject(HttpClient);
