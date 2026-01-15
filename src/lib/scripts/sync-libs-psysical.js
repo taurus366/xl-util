@@ -7,14 +7,12 @@ const { execSync } = require('child_process');
 // Глобален кеш в HOME директорията
 const CACHE_DIR = path.join(os.homedir(), '.aiolds-cache');
 const LIBS_DIR = path.join(process.cwd(), 'libs');
-// Намери правилния файл - провери и за двата варианта
 const TSCONFIG_BASE = path.join(process.cwd(), 'tsconfig.base.json');
 const TSCONFIG_ROOT = path.join(process.cwd(), 'tsconfig.json');
 const TSCONFIG_PATH = fs.existsSync(TSCONFIG_BASE) ? TSCONFIG_BASE : TSCONFIG_ROOT;
 
 console.log(`🔍 Използва се конфигурация от: ${TSCONFIG_PATH}`);
 
-// Създаване на базовите директории
 if (!fs.existsSync(CACHE_DIR)) fs.mkdirSync(CACHE_DIR, { recursive: true });
 if (!fs.existsSync(LIBS_DIR)) fs.mkdirSync(LIBS_DIR, { recursive: true });
 
@@ -46,29 +44,43 @@ function sync() {
         const publicPath = path.join(LIBS_DIR, name);
         const cachePath = path.join(CACHE_DIR, name);
 
-        // Ако папката е локална (истинска папка в libs), не я пипаме
+        // 1. Проверка дали съществуващата папка в libs е истинска локална разработка
         if (fs.existsSync(publicPath) && !fs.lstatSync(publicPath).isSymbolicLink()) {
-            console.log(`🏠 ${name} е локален сорс. Пропускане.`);
-            return;
+            // Ако няма repoUrl в конфигурацията, приемаме че е локален сорс
+            if (!repoUrl) {
+                console.log(`🏠 ${name} е локален сорс. Пропускане.`);
+                return;
+            }
         }
 
-        // Ако имаме URL и нямаме кеш -> теглим
+        // 2. Теглене в кеша (ако имаме URL)
         if (repoUrl && !fs.existsSync(cachePath)) {
-            console.log(`🚀 Теглене на ${name} от ${repoUrl}...`);
+            console.log(`🚀 Теглене на ${name} в кеша...`);
             try {
                 execSync(`git clone --depth 1 ${repoUrl} ${cachePath}`, { stdio: 'inherit' });
-                // Трием .git за сигурност и "read-only" усещане
                 execSync(`rm -rf ${path.join(cachePath, '.git')}`);
             } catch (e) {
                 console.error(`❌ Грешка при теглене на ${name}`);
             }
         }
 
-        // Създаваме симлинк, ако сорсът е в кеша, но не е в libs
-        if (fs.existsSync(cachePath) && !fs.existsSync(publicPath)) {
-            console.log(`🔗 Свързване ${name} -> libs/`);
-            const type = process.platform === "win32" ? "junction" : "dir";
-            fs.symlinkSync(cachePath, publicPath, type);
+        // 3. ФИЗИЧЕСКО КОПИРАНЕ (замества симлинка)
+        if (fs.existsSync(cachePath)) {
+            // Ако в libs има симлинк или стара папка, я трием, за да копираме на чисто
+            if (fs.existsSync(publicPath)) {
+                console.log(`🧹 Изтриване на старото съдържание в libs/${name}`);
+                fs.rmSync(publicPath, { recursive: true, force: true });
+            }
+
+            console.log(`📂 Физическо копиране: ${name} -> libs/`);
+
+            // Използваме системна команда за бързо копиране
+            const copyCmd = process.platform === "win32"
+                ? `xcopy "${cachePath}" "${publicPath}" /E /I /H /Y`
+                : `cp -R "${cachePath}/." "${publicPath}"`;
+
+            fs.mkdirSync(publicPath, { recursive: true });
+            execSync(copyCmd);
         }
     });
 }
@@ -83,14 +95,13 @@ if (mode === 'update') {
         if (repoUrl) {
             const cachePath = path.join(CACHE_DIR, name);
             if (fs.existsSync(cachePath)) {
-                console.log(`🗑️ Изтриване на стара версия: ${name}`);
+                console.log(`🗑️ Изтриване на кеш: ${name}`);
                 fs.rmSync(cachePath, { recursive: true, force: true });
             }
         }
     });
-    // След изчистване, пускаме стандартен sync
     sync();
-    console.log('✅ Всички модули са обновени успешно!');
+    console.log('✅ Всички модули са обновени и копирани успешно!');
 } else {
     sync();
 }
