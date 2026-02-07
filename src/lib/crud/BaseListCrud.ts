@@ -1,5 +1,6 @@
 import { inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { MessageService } from 'primeng/api';
 
 import { Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -11,6 +12,8 @@ export interface ICrudDetailService<T> {
 }
 
 export abstract class BaseListCrud<T> {
+
+    private messageService = inject(MessageService);
 
     constructor(protected detailService: ICrudDetailService<T>) {
         this.detailService.onSaveSuccess$
@@ -75,6 +78,22 @@ export abstract class BaseListCrud<T> {
             size: rows.toString()
         };
 
+        if (filters) {
+            for (const key in filters) {
+                const filterData = filters[key];
+
+                // Взимаме стойността (PrimeNG поддържа единичен обект или масив от филтри на колона)
+                const value = Array.isArray(filterData) ? filterData[0]?.value : filterData?.value;
+
+                if (value !== null && value !== undefined) {
+                    // Ако е масив (от твоите бутони), го правим на запетаи, иначе просто toString()
+                    params[key] = Array.isArray(value) ? value.join(',') : value.toString();
+                }
+            }
+        }
+
+
+
         // Ако имаш филтри от PrimeNG, те ще влязат тук
         // Можеш да ги добавиш към params, ако бекендът ги очаква
         // if (filters) {
@@ -101,6 +120,13 @@ export abstract class BaseListCrud<T> {
             error: (err) => {
                 console.error(`Грешка при зареждане на ${url}:`, err);
                 this.loading.set(false);
+                // ПОЯВЯВА СЕ НА ЕКРАНА:
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Грешка при зареждане',
+                    detail: err.message || 'Сървърът не отговаря. Моля, опитайте по-късно.',
+                    sticky: true // Съобщението стои, докато потребителят не го затвори
+                });
             }
         });
     }
