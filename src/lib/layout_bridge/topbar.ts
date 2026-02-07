@@ -6,6 +6,7 @@ export interface TopBarConfig {
     logoUrl?: string;
     copyright?: string;
     logoStyle?: {[key: string]: string};
+    clickUrl?: string;
 }
 
 export const XL_TOPBAR_CONFIG = new InjectionToken<TopBarConfig>('XL_TOPBAR_CONFIG');
