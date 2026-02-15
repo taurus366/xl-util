@@ -49,8 +49,10 @@ function extract() {
 
         foundKeys.forEach(key => {
             if (!(key in finalData)) {
-                // МАГИЯТА: Ако ключът е нов, го слагаме и като стойност
-                finalData[key] = key;
+                // ПРЕОБРАЗУВАНЕ: get_te_fast -> "get te fast"
+                // Заменяме долните черти с интервали
+
+                finalData[key] = key.replace(/_/g, ' ');
                 newKeysCount++;
             }
         });
