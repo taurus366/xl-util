@@ -20,6 +20,8 @@ export class WebSocketService implements OnDestroy {
         // Увери се, че URL-ът съвпада с твоя Java Endpoint
         const socketFactory = () => new SockJS(`${this.apiUrl}/ws`);
         this.stompClient = Stomp.over(socketFactory);
+        this.stompClient.heartbeatIncoming = 30000;
+        this.stompClient.heartbeatOutgoing = 30000;
 
         // Спираме логовете в конзолата за по-чист дебъг
         this.stompClient.debug = () => {};
