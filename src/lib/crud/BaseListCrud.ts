@@ -126,7 +126,7 @@ export abstract class BaseListCrud<T> {
                 this.messageService.add({
                     severity: 'error',
                     summary: this.tr.instant('Error'),
-                    detail: err.error,
+                    detail: err.error.message,
                     sticky: true // Съобщението стои, докато потребителят не го затвори
                 });
             }
