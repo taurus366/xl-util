@@ -5,6 +5,7 @@ import { SelectionService } from '../input_list/selectionService';
 import { DialogService } from 'primeng/dynamicdialog';
 import { getComponentByPath } from '../menu/route-store';
 import { firstValueFrom } from 'rxjs';
+import { MessageService } from 'primeng/api';
 
 // export interface IDetailConfig {
 //     save: string;
@@ -15,6 +16,7 @@ import { firstValueFrom } from 'rxjs';
 export abstract class BaseDetailCrud<T> {
     protected http = inject(HttpClient);
     protected selectionService = inject(SelectionService);
+    private messageService = inject(MessageService);
 
     selectedItem = signal<T | null>(null);
     isSaving = signal(false);
@@ -66,7 +68,15 @@ export abstract class BaseDetailCrud<T> {
                 this.onSaveSuccess$.next(savedItem);
                 this.closeDetail(); // Автоматично затваряне след успех
             },
-            error: () => this.isSaving.set(false)
+            error: (err) => {
+                this.isSaving.set(false)
+                this.messageService.add({
+                    severity: 'error',
+                    summary: 'Грешка при зареждане',
+                    detail: err.message || 'Сървърът не отговаря. Моля, опитайте по-късно.',
+                    sticky: true // Съобщението стои, докато потребителят не го затвори
+                });
+            }
         });
     }
 
