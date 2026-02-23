@@ -5,6 +5,7 @@ import { MessageService } from 'primeng/api';
 import { Subject } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { SelectionService } from '../input_list/selectionService';
+import { TranslateService } from '@ngx-translate/core';
 
 export interface ICrudDetailService<T> {
     onSaveSuccess$: Subject<T>;
@@ -14,6 +15,7 @@ export interface ICrudDetailService<T> {
 export abstract class BaseListCrud<T> {
 
     private messageService = inject(MessageService);
+    private tr = inject(TranslateService);
 
     constructor(protected detailService: ICrudDetailService<T>) {
         this.detailService.onSaveSuccess$
@@ -123,8 +125,8 @@ export abstract class BaseListCrud<T> {
                 // ПОЯВЯВА СЕ НА ЕКРАНА:
                 this.messageService.add({
                     severity: 'error',
-                    summary: 'Грешка при зареждане',
-                    detail: err.message || 'Сървърът не отговаря. Моля, опитайте по-късно.',
+                    summary: this.tr.instant('Error'),
+                    detail: err.error,
                     sticky: true // Съобщението стои, докато потребителят не го затвори
                 });
             }

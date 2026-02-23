@@ -6,6 +6,7 @@ import { DialogService } from 'primeng/dynamicdialog';
 import { getComponentByPath } from '../menu/route-store';
 import { firstValueFrom } from 'rxjs';
 import { MessageService } from 'primeng/api';
+import { TranslateService } from '@ngx-translate/core';
 
 // export interface IDetailConfig {
 //     save: string;
@@ -17,6 +18,7 @@ export abstract class BaseDetailCrud<T> {
     protected http = inject(HttpClient);
     protected selectionService = inject(SelectionService);
     private messageService = inject(MessageService);
+    private tr = inject(TranslateService);
 
     selectedItem = signal<T | null>(null);
     isSaving = signal(false);
@@ -72,8 +74,8 @@ export abstract class BaseDetailCrud<T> {
                 this.isSaving.set(false)
                 this.messageService.add({
                     severity: 'error',
-                    summary: 'Грешка при зареждане',
-                    detail: err.message || 'Сървърът не отговаря. Моля, опитайте по-късно.',
+                    summary: this.tr.instant('Error'),
+                    detail: err.error,
                     sticky: true // Съобщението стои, докато потребителят не го затвори
                 });
             }
