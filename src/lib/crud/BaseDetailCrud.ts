@@ -17,8 +17,8 @@ import { TranslateService } from '@ngx-translate/core';
 export abstract class BaseDetailCrud<T> {
     protected http = inject(HttpClient);
     protected selectionService = inject(SelectionService);
-    private messageService = inject(MessageService);
-    private tr = inject(TranslateService);
+    protected messageService = inject(MessageService);
+    protected tr = inject(TranslateService);
 
     selectedItem = signal<T | null>(null);
     isSaving = signal(false);

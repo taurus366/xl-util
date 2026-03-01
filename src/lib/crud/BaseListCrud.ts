@@ -14,8 +14,8 @@ export interface ICrudDetailService<T> {
 
 export abstract class BaseListCrud<T> {
 
-    private messageService = inject(MessageService);
-    private tr = inject(TranslateService);
+    protected messageService = inject(MessageService);
+    protected tr = inject(TranslateService);
 
     constructor(protected detailService: ICrudDetailService<T>) {
         this.detailService.onSaveSuccess$
