@@ -123,12 +123,12 @@ export abstract class BaseListCrud<T> {
                 console.error(`Грешка при зареждане на ${url}:`, err);
                 this.loading.set(false);
                 // ПОЯВЯВА СЕ НА ЕКРАНА:
-                this.messageService.add({
-                    severity: 'error',
-                    summary: this.tr.instant('Error'),
-                    detail: err.error.message,
-                    sticky: true // Съобщението стои, докато потребителят не го затвори
-                });
+                // this.messageService.add({
+                //     severity: 'error',
+                //     summary: this.tr.instant('Error'),
+                //     detail: err.error.message,
+                //     sticky: true // Съобщението стои, докато потребителят не го затвори
+                // });
             }
         });
     }
