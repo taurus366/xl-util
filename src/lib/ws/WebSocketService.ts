@@ -17,27 +17,41 @@ export class WebSocketService implements OnDestroy {
     }
 
     private initConnection() {
-        // Увери се, че URL-ът съвпада с твоя Java Endpoint
+        // 1. ПРОВЕРКА: Ако вече имаме клиент и той е в процес на свързване, не прави нищо
+        if (this.stompClient && (this.stompClient.active || this.stompClient.connected)) {
+            return;
+        }
+
         const socketFactory = () => new SockJS(`${this.apiUrl}/ws`);
         this.stompClient = Stomp.over(socketFactory);
-        this.stompClient.heartbeatIncoming = 30000;
-        this.stompClient.heartbeatOutgoing = 30000;
 
-        // Спираме логовете в конзолата за по-чист дебъг
+        this.stompClient.reconnect_delay = 5000;
+        this.stompClient.heartbeatIncoming = 10000; // Намаляваме на 10 сек за по-бърза реакция
+        this.stompClient.heartbeatOutgoing = 10000;
         this.stompClient.debug = () => {};
 
-        this.stompClient.connect({},
-            () => {
-                console.log('✅ WebSocket Connected');
-                this.isConnected$.next(true);
-            },
-            (error: any) => {
-                console.error('❌ WebSocket Error:', error);
-                this.isConnected$.next(false);
-                // Автоматичен реконект след 5 секунди
-                setTimeout(() => this.initConnection(), 5000);
-            }
-        );
+        this.stompClient.onConnect = () => {
+            console.log('✅ WebSocket Connected');
+            this.isConnected$.next(true);
+        };
+
+        this.stompClient.onWebSocketClose = () => {
+            console.warn('❌ WebSocket Connection Closed');
+            this.isConnected$.next(false);
+        };
+
+        // Важно: Ако бекендът върне грешка в оторизацията или протокола
+        this.stompClient.onStompError = (frame) => {
+            console.error('❌ STOMP Error');
+            this.isConnected$.next(false);
+        };
+
+        // Използвай activate() за съвременните версии на stompjs
+        if (this.stompClient.activate) {
+            this.stompClient.activate();
+        } else {
+            this.stompClient.connect({}, () => {});
+        }
     }
 
     /**
