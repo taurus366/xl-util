@@ -62,7 +62,7 @@ export abstract class BaseListCrud<T> {
      * @param rows Брой записи на страница
      * @param filters Филтри от PrimeNG таблицата
      */
-    loadList(first: number, rows: number, filters?: any) {
+    loadList(first: number, rows: number, filters?: any, sortField?: string, sortOrder?: number) {
         this.lastFirst = first;
         this.lastRows = rows;
         this.lastFilters = filters;
@@ -79,6 +79,14 @@ export abstract class BaseListCrud<T> {
             page: (first / rows).toString(),
             size: rows.toString()
         };
+
+        // --- ЛОГИКА ЗА СОРТИРАНЕ ---
+        if (sortField) {
+            // Превръщаме PrimeNG посоката (1 или -1) в текст (asc или desc)
+            const direction = sortOrder === 1 ? 'asc' : 'desc';
+            // Spring Boot обикновено очаква формат: sort=имеНаПоле,посока
+            params['sort'] = `${sortField},${direction}`;
+        }
 
         if (filters) {
             for (const key in filters) {
