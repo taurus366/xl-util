@@ -34,22 +34,30 @@ export abstract class BaseDetailCrud<T> {
     abstract deleteRoute: string;
 
     /** Зарежда данни и отваря диалога */
-    // loadData(id: any) {
-    //     this.loading.set(true);
-    //     this.isVisible.set(true); // Показваме диалога (може да покаже лоудър вътре)
-    //
-    //     const url = this.endpoint.startsWith('/') ? this.endpoint : `/${this.endpoint}`;
-    //     this.http.get<T>(`${url}/${id}`).subscribe({
-    //         next: (data) => {
-    //             this.selectedItem.set(data);
-    //             this.loading.set(false);
-    //         },
-    //         error: () => {
-    //             this.loading.set(false);
-    //             this.closeDetail(); // Затваряме при грешка
-    //         }
-    //     });
-    // }
+    loadData(id: any) {
+        this.loading.set(true);
+        this.isVisible.set(true); // Отваряме диалога веднага (потребителят вижда скелет или лоудър)
+        this.selectedItem.set(null); // Чистим стария запис
+
+        const url = this.getRoute.startsWith('/') ? this.getRoute : `/${this.getRoute}`;
+
+        // Извикваме конкретното ID
+        this.http.get<T>(`${url}/${id}`).subscribe({
+            next: (data) => {
+                this.selectedItem.set(data);
+                this.loading.set(false);
+            },
+            error: (err) => {
+                this.loading.set(false);
+                this.closeDetail();
+                this.messageService.add({
+                    severity: 'error',
+                    summary: this.tr.instant('Error'),
+                    detail: err.error?.message || 'Failed to load details'
+                });
+            }
+        });
+    }
 
     saveItem(item: T) {
         this.isSaving.set(true);
@@ -91,9 +99,15 @@ export abstract class BaseDetailCrud<T> {
         this.isVisible.set(true);
     }
 
-    openEditDialog(item: T) {
-        this.selectedItem.set({ ...item });
-        this.isVisible.set(true);
+    openEditDialog(item: any) {
+        // this.selectedItem.set({ ...item });
+        // this.isVisible.set(true);
+        const id = item.id;
+        if (id) {
+            this.loadData(id);
+        } else {
+            console.error("Item has no ID for loading details");
+        }
     }
 
     closeDetail() {
