@@ -144,10 +144,23 @@ export abstract class BaseListCrud<T> {
     /**
      * Изтриване - автоматично ползва базовия endpoint
      */
+    // deleteItem(id: any) {
+    //     const url = this.listRoute.startsWith('/') ? this.listRoute : `/${this.listRoute}`;
+    //     return this.http.delete(`${url}/${id}`).subscribe(() => {
+    //         this.removeLocalItem(id);
+    //     });
+    // }
     deleteItem(id: any) {
-        const url = this.listRoute.startsWith('/') ? this.listRoute : `/${this.listRoute}`;
+        // 1. Вземаме маршрута и премахваме '/list' или 'list' в края
+        let basePath = this.listRoute.replace(/\/list\/?$/, '');
+
+        // 2. Уверяваме се, че започва с '/'
+        const url = basePath.startsWith('/') ? basePath : `/${basePath}`;
+
+        // 3. Изпълняваме заявката
         return this.http.delete(`${url}/${id}`).subscribe(() => {
             this.removeLocalItem(id);
+            // Тук е добре да добавиш и нотификация за успех
         });
     }
 
