@@ -151,16 +151,39 @@ export abstract class BaseListCrud<T> {
     //     });
     // }
     deleteItem(id: any) {
-        // 1. Вземаме маршрута и премахваме '/list' или 'list' в края
         let basePath = this.listRoute.replace(/\/list\/?$/, '');
-
-        // 2. Уверяваме се, че започва с '/'
         const url = basePath.startsWith('/') ? basePath : `/${basePath}`;
 
-        // 3. Изпълняваме заявката
-        return this.http.delete(`${url}/${id}`).subscribe(() => {
-            this.removeLocalItem(id);
-            // Тук е добре да добавиш и нотификация за успех
+        // ПРОВЕРКА: Превръщаме в масив, за да поддържаме bulk и единично изтриване
+        const idsArray = Array.isArray(id) ? id : [id];
+        const targetId = Array.isArray(id) ? 'bulk' : id;
+
+        return this.http.delete(`${url}/${targetId}`, {
+            body: { ids: idsArray }
+        }).subscribe({
+            next: () => {
+                // 1. Махаме елементите от локалния сигнал
+                idsArray.forEach(idToRemove => this.removeLocalItem(idToRemove));
+
+                // 2. ПОКАЗВАМЕ СЪОБЩЕНИЕ ЗА УСПЕХ
+                this.messageService.add({
+                    severity: 'success',
+                    summary: this.tr.instant('Success'),
+                    detail: this.tr.instant('Deleted'),
+                    life: 3000 // Съобщението изчезва след 3 сек.
+                });
+            },
+            error: (err) => {
+                // console.error('Грешка при изтриване:', err);
+
+                // 3. ПОКАЗВАМЕ СЪОБЩЕНИЕ ЗА ГРЕШКА
+                this.messageService.add({
+                    severity: 'error',
+                    summary: this.tr.instant('Error'),
+                    detail: err.error?.message || this.tr.instant('Delete_failed'),
+                    sticky: true // Грешката остава, докато не се затвори ръчно
+                });
+            }
         });
     }
 
