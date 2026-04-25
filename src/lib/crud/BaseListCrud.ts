@@ -157,7 +157,7 @@ export abstract class BaseListCrud<T> {
         // ПРОВЕРКА: Превръщаме в масив, за да поддържаме bulk и единично изтриване
         const idsArray = Array.isArray(id) ? id : [id];
 
-        return this.http.delete(`${url}/remove`, {
+        return this.http.delete(`${url}/delete`, {
             body: idsArray
         }).subscribe({
             next: () => {
