@@ -158,7 +158,7 @@ export abstract class BaseListCrud<T> {
         const idsArray = Array.isArray(id) ? id : [id];
 
         return this.http.delete(`${url}/remove`, {
-            body: { ids: idsArray }
+            body: idsArray
         }).subscribe({
             next: () => {
                 // 1. Махаме елементите от локалния сигнал
