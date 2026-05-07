@@ -17,14 +17,23 @@ export abstract class BaseListCrud<T> {
     protected messageService = inject(MessageService);
     protected tr = inject(TranslateService);
 
-    constructor(protected detailService: ICrudDetailService<T>) {
-        this.detailService.onSaveSuccess$
-            .pipe(takeUntilDestroyed())
-        .subscribe(() => {
-            this.loadList(this.lastFirst, this.lastRows, this.lastFilters);
-        })
+    // constructor(protected detailService: ICrudDetailService<T>) {
+    //     this.detailService.onSaveSuccess$
+    //         .pipe(takeUntilDestroyed())
+    //     .subscribe(() => {
+    //         this.loadList(this.lastFirst, this.lastRows, this.lastFilters);
+    //     })
+    // }
+    protected constructor(protected detailService?: ICrudDetailService<T>) { // Добавяме "?"
+        // Проверяваме дали изобщо е подаден сървис, преди да се абонираме
+        if (this.detailService && this.detailService.onSaveSuccess$) {
+            this.detailService.onSaveSuccess$
+                .pipe(takeUntilDestroyed())
+                .subscribe(() => {
+                    this.loadList(this.lastFirst, this.lastRows, this.lastFilters);
+                });
+        }
     }
-
 
     protected selectionService = inject(SelectionService);
     /**
