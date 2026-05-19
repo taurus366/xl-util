@@ -36,7 +36,9 @@ export abstract class BaseDetailCrud<T> {
     /** Зарежда данни и отваря диалога */
     loadData(id: any) {
         this.loading.set(true);
-        this.isVisible.set(true); // Отваряме диалога веднага (потребителят вижда скелет или лоудър)
+        if(!this.isVisible()) {
+            this.isVisible.set(true); // Отваряме диалога веднага (потребителят вижда скелет или лоудър)
+        }
         this.selectedItem.set(null); // Чистим стария запис
 
         const url = this.getRoute.startsWith('/') ? this.getRoute : `/${this.getRoute}`;
@@ -76,7 +78,9 @@ export abstract class BaseDetailCrud<T> {
                 this.isSaving.set(false);
                 // this.onSaveSuccess(savedItem);
                 this.onSaveSuccess$.next(savedItem);
-                this.closeDetail(); // Автоматично затваряне след успех
+                // this.closeDetail(); // Автоматично затваряне след успех
+                // @ts-ignore
+                this.loadData(savedItem.id);
             },
             error: (err) => {
                 this.isSaving.set(false)
