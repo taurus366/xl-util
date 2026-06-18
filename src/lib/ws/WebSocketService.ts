@@ -1,6 +1,6 @@
 import { inject, Injectable, OnDestroy } from '@angular/core';
 import { CompatClient, Stomp } from '@stomp/stompjs';
-import { BehaviorSubject, filter, Observable, switchMap } from 'rxjs';
+import { BehaviorSubject, distinctUntilChanged, filter, Observable, switchMap } from 'rxjs';
 import SockJS from 'sockjs-client';
 import {XL_AUTH_CONFIG} from 'xl-auth';
 import { XL_API_URL } from './WsToken';
@@ -10,6 +10,7 @@ import { XL_API_URL } from './WsToken';
 export class WebSocketService implements OnDestroy {
     private stompClient: CompatClient | null = null;
     private isConnected$ = new BehaviorSubject<boolean>(false);
+    public connected$ = this.isConnected$.asObservable().pipe(distinctUntilChanged());
     // private authConfig = inject(XL_AUTH_CONFIG);
     private apiUrl = inject(XL_API_URL, { optional: true });
     constructor() {
@@ -26,13 +27,18 @@ export class WebSocketService implements OnDestroy {
         this.stompClient = Stomp.over(socketFactory);
 
         this.stompClient.reconnect_delay = 5000;
-        this.stompClient.heartbeatIncoming = 10000; // Намаляваме на 10 сек за по-бърза реакция
-        this.stompClient.heartbeatOutgoing = 10000;
+        this.stompClient.heartbeatIncoming = 25000;
+        this.stompClient.heartbeatOutgoing = 25000;
         this.stompClient.debug = () => {};
 
         this.stompClient.onConnect = () => {
             console.log('✅ WebSocket Connected');
             this.isConnected$.next(true);
+        };
+
+        this.stompClient.onDisconnect = () => {
+            console.warn('⚠️ WebSocket Disconnected (STOMP)');
+            this.isConnected$.next(false);
         };
 
         this.stompClient.onWebSocketClose = () => {
@@ -59,7 +65,8 @@ export class WebSocketService implements OnDestroy {
      */
     public listen(topic: string): Observable<any> {
         return this.isConnected$.pipe(
-            filter(connected => connected), // Чакаме връзката да е активна
+            distinctUntilChanged(),
+            filter(connected => connected),
             switchMap(() => new Observable(observer => {
                 const subscription = this.stompClient?.subscribe(`/topic/${topic}`, (message) => {
                     if (message.body) {
