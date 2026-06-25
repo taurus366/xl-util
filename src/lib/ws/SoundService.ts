@@ -5,9 +5,29 @@ export type SoundPreset = 'ding' | 'double-ding' | 'soft' | 'alert';
 @Injectable({ providedIn: 'root' })
 export class SoundService {
 
+    private ctx: AudioContext | null = null;
+
+    private getCtx(): AudioContext {
+        if (!this.ctx) {
+            this.ctx = new AudioContext();
+            // Unlock on first user gesture
+            const unlock = () => {
+                this.ctx?.resume();
+                document.removeEventListener('click', unlock);
+                document.removeEventListener('keydown', unlock);
+            };
+            document.addEventListener('click', unlock);
+            document.addEventListener('keydown', unlock);
+        }
+        if (this.ctx.state === 'suspended') {
+            this.ctx.resume();
+        }
+        return this.ctx;
+    }
+
     play(preset: SoundPreset = 'ding') {
         try {
-            const ctx = new AudioContext();
+            const ctx = this.getCtx();
             switch (preset) {
                 case 'ding':        return this.playDing(ctx);
                 case 'double-ding': return this.playDoubleDing(ctx);
