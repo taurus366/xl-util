@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 
-export type SoundPreset = 'ding' | 'double-ding' | 'soft' | 'alert';
+export type SoundPreset = 'ding' | 'double-ding' | 'soft' | 'alert' | 'new-order';
 
 @Injectable({ providedIn: 'root' })
 export class SoundService {
@@ -10,7 +10,6 @@ export class SoundService {
     private getCtx(): AudioContext {
         if (!this.ctx) {
             this.ctx = new AudioContext();
-            // Unlock on first user gesture
             const unlock = () => {
                 this.ctx?.resume();
                 document.removeEventListener('click', unlock);
@@ -33,6 +32,7 @@ export class SoundService {
                 case 'double-ding': return this.playDoubleDing(ctx);
                 case 'soft':        return this.playSoft(ctx);
                 case 'alert':       return this.playAlert(ctx);
+                case 'new-order':   return this.playNewOrder(ctx);
             }
         } catch (e) {}
     }
@@ -54,6 +54,14 @@ export class SoundService {
         this.tone(ctx, 660,  0,    0.4, 0.15);
         this.tone(ctx, 880,  0.18, 0.4, 0.15);
         this.tone(ctx, 1100, 0.36, 0.4, 0.2);
+    }
+
+    // Три ноти нагоре — ясно и натоятелно
+    private playNewOrder(ctx: AudioContext) {
+        this.tone(ctx, 523, 0,    0.5, 0.18); // До
+        this.tone(ctx, 659, 0.2,  0.5, 0.18); // Ми
+        this.tone(ctx, 784, 0.4,  0.5, 0.18); // Сол
+        this.tone(ctx, 1047, 0.6, 0.6, 0.35); // До (октава нагоре — по-дълго)
     }
 
     private tone(ctx: AudioContext, frequency: number, startOffset: number, volume: number, duration: number) {
