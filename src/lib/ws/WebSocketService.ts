@@ -1,4 +1,4 @@
-import { inject, Injectable, OnDestroy } from '@angular/core';
+import { inject, Injectable, NgZone, OnDestroy } from '@angular/core';
 import { CompatClient, Stomp } from '@stomp/stompjs';
 import { BehaviorSubject, distinctUntilChanged, filter, Observable, switchMap } from 'rxjs';
 import SockJS from 'sockjs-client';
@@ -13,6 +13,7 @@ export class WebSocketService implements OnDestroy {
     public connected$ = this.isConnected$.asObservable().pipe(distinctUntilChanged());
     // private authConfig = inject(XL_AUTH_CONFIG);
     private apiUrl = inject(XL_API_URL, { optional: true });
+    private ngZone = inject(NgZone);
     constructor() {
         this.initConnection();
     }
@@ -70,11 +71,10 @@ export class WebSocketService implements OnDestroy {
             switchMap(() => new Observable(observer => {
                 const subscription = this.stompClient?.subscribe(`/topic/${topic}`, (message) => {
                     if (message.body) {
-                        observer.next(JSON.parse(message.body));
+                        this.ngZone.run(() => observer.next(JSON.parse(message.body)));
                     }
                 });
 
-                // При отписване от Observable (ngOnDestroy), спираме и STOMP абонамента
                 return () => {
                     if (subscription) {
                         subscription.unsubscribe();
